@@ -66,6 +66,31 @@ for i in range(min(6, len(mr.freq))):
     plot_mode(mr, i=i, scale=100).show()
 ```
 
+### Mode shapes
+
+The following images show the first four vibration modes of a simply supported
+square plate:
+
+#### Mode 1 — Fundamental (1,1)
+
+![Mode 1](images/mode_1.png)
+*First mode shape: single half-wave in both directions.*
+
+#### Mode 2 — (1,2) or (2,1)
+
+![Mode 2](images/mode_2.png)
+*Second mode shape: two half-waves in one direction.*
+
+#### Mode 3 — Higher harmonic
+
+![Mode 3](images/mode_3.png)
+*Third mode shape.*
+
+#### Mode 4 — (2,2)
+
+![Mode 4](images/mode_4.png)
+*Fourth mode shape: two half-waves in both directions.*
+
 ## Analytical comparison
 
 For a simply supported rectangular plate (a × b), the Navier solution gives:

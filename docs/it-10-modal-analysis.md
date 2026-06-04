@@ -67,6 +67,31 @@ for i in range(min(6, len(mr.freq))):
     plot_mode(mr, i=i, scale=100).show()
 ```
 
+### Forme modali
+
+Le seguenti immagini mostrano i primi quattro modi di vibrazione di una piastra
+quadrata semplicemente appoggiata:
+
+#### Modo 1 — Fondamentale (1,1)
+
+![Modo 1](images/mode_1.png)
+*Prima forma modale: mezza onda singola in entrambe le direzioni.*
+
+#### Modo 2 — (1,2) o (2,1)
+
+![Modo 2](images/mode_2.png)
+*Seconda forma modale: due mezze onde in una direzione.*
+
+#### Modo 3 — Armonica superiore
+
+![Modo 3](images/mode_3.png)
+*Terza forma modale.*
+
+#### Modo 4 — (2,2)
+
+![Modo 4](images/mode_4.png)
+*Quarta forma modale: due mezze onde in entrambe le direzioni.*
+
 ## Confronto analitico
 
 Per una piastra rettangolare semplicemente appoggiata (a × b), la soluzione di

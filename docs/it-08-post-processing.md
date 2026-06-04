@@ -114,3 +114,33 @@ Coordinate naturali:
 - `(1, -1)`: nodo 2
 - `(1, 1)`: nodo 3
 - `(-1, 1)`: nodo 4
+
+## Esempi di visualizzazione
+
+Le seguenti immagini mostrano risultati tipici di post-processing per una piastra
+quadrata semplicemente appoggiata sotto pressione uniforme.
+
+### Momento flettente Mx
+
+![Momento flettente Mx](images/stress_Mx_simply_supported.png)
+*Mappa di contorno del momento flettente Mx [Nm/m].*
+
+### Momento flettente My
+
+![Momento flettente My](images/stress_My_simply_supported.png)
+*Mappa di contorno del momento flettente My [Nm/m].*
+
+### Momento torcente Mxy
+
+![Momento torcente Mxy](images/stress_Mxy_simply_supported.png)
+*Mappa di contorno del momento torcente Mxy [Nm/m].*
+
+### Confronto piastra incastrata
+
+Per confronto, ecco i risultati per una piastra incastrata (tutti i GdL fissati sul bordo):
+
+![Deformata piastra incastrata](images/deformed_clamped.png)
+*Forma deformata di una piastra incastrata (scala 100×).*
+
+![Mx piastra incastrata](images/stress_Mx_clamped.png)
+*Momento flettente Mx [Nm/m] per una piastra incastrata. Notare i momenti negativi ai bordi incastrati.*

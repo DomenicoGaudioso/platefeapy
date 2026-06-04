@@ -68,6 +68,33 @@ print(f"w_max FEM   = {abs(res.displacement(5, 'w')):.6e} m")
 print(f"w_max esatto = {w_exact:.6e} m")
 ```
 
+## Visualizzazione
+
+Dopo la soluzione, puoi visualizzare la mesh e i risultati:
+
+```python
+from platefeapy.plotting import plot_mesh, plot_deformed, plot_contour
+
+plot_mesh(m).show()
+plot_deformed(res, scale=100).show()
+plot_contour(res, "w").show()
+```
+
+### Mesh
+
+![Mesh piastra semplicemente appoggiata](images/mesh_simply_supported.png)
+*Mesh 8×8 di una piastra quadrata semplicemente appoggiata.*
+
+### Forma deformata
+
+![Deformata piastra semplicemente appoggiata](images/deformed_simply_supported.png)
+*Forma deformata (scala 100×) sotto pressione uniforme.*
+
+### Contorno spostamento
+
+![Spostamento piastra semplicemente appoggiata](images/displacement_w_simply_supported.png)
+*Mappa di contorno dello spostamento trasversale w [m].*
+
 ## Prossimi passi
 
 - [Modello Strutturale](it-03-structural-model.md) — nodi, materiali, sezioni, elementi

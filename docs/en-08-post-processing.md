@@ -114,3 +114,33 @@ Natural coordinates:
 - `(1, -1)`: node 2
 - `(1, 1)`: node 3
 - `(-1, 1)`: node 4
+
+## Visualization examples
+
+The following images show typical post-processing results for a simply supported
+square plate under uniform pressure.
+
+### Bending moment Mx
+
+![Bending moment Mx](images/stress_Mx_simply_supported.png)
+*Bending moment Mx [Nm/m] contour plot.*
+
+### Bending moment My
+
+![Bending moment My](images/stress_My_simply_supported.png)
+*Bending moment My [Nm/m] contour plot.*
+
+### Twisting moment Mxy
+
+![Twisting moment Mxy](images/stress_Mxy_simply_supported.png)
+*Twisting moment Mxy [Nm/m] contour plot.*
+
+### Clamped plate comparison
+
+For comparison, here are results for a clamped plate (all DOFs fixed on boundary):
+
+![Clamped plate deformed](images/deformed_clamped.png)
+*Deformed shape of a clamped plate (scale 100×).*
+
+![Clamped plate Mx](images/stress_Mx_clamped.png)
+*Bending moment Mx [Nm/m] for a clamped plate. Note the negative moments at the clamped edges.*

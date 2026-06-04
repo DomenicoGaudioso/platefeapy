@@ -68,6 +68,33 @@ print(f"w_max FEM   = {abs(res.displacement(5, 'w')):.6e} m")
 print(f"w_max exact = {w_exact:.6e} m")
 ```
 
+## Visualization
+
+After solving, you can visualize the mesh and results:
+
+```python
+from platefeapy.plotting import plot_mesh, plot_deformed, plot_contour
+
+plot_mesh(m).show()
+plot_deformed(res, scale=100).show()
+plot_contour(res, "w").show()
+```
+
+### Mesh
+
+![Simply supported plate mesh](images/mesh_simply_supported.png)
+*8×8 mesh of a simply supported square plate.*
+
+### Deformed shape
+
+![Simply supported plate deformed](images/deformed_simply_supported.png)
+*Deformed shape (scale 100×) under uniform pressure.*
+
+### Displacement contour
+
+![Simply supported plate displacement](images/displacement_w_simply_supported.png)
+*Transverse displacement w [m] contour plot.*
+
 ## Next steps
 
 - [Structural Model](en-03-structural-model.md) — nodes, materials, sections, elements

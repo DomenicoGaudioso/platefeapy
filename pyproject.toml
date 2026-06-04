@@ -1,0 +1,53 @@
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "platefeapy"
+version = "0.1.0"
+description = "FEM plate/shell solver: Mindlin-Reissner & Kirchhoff-Love plates, pressure/thermal loads, modal analysis, Plotly visualization"
+readme = "README.md"
+requires-python = ">=3.9"
+license = "MIT"
+authors = [{ name = "Domenico Gaudioso" }]
+keywords = ["FEM", "plate", "shell", "Mindlin", "Kirchhoff", "structural", "finite-element"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Operating System :: OS Independent",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Scientific/Engineering :: Mathematics",
+    "Topic :: Scientific/Engineering :: Physics",
+    "Intended Audience :: Science/Research",
+    "Intended Audience :: Developers",
+    "Typing :: Typed",
+]
+dependencies = [
+    "numpy>=1.24",
+    "scipy>=1.10",
+]
+
+[project.optional-dependencies]
+plot = ["plotly>=6.1.1", "kaleido>=1.0"]
+all = ["plotly>=6.1.1", "kaleido>=1.0"]
+dev = ["pytest>=7.0", "plotly>=6.1.1", "kaleido>=1.0"]
+
+[project.urls]
+Homepage = "https://github.com/DomenicoGaudioso/platefeapy"
+Repository = "https://github.com/DomenicoGaudioso/platefeapy"
+Documentation = "https://github.com/DomenicoGaudioso/platefeapy#readme"
+Issues = "https://github.com/DomenicoGaudioso/platefeapy/issues"
+
+[tool.setuptools.packages.find]
+include = ["platefeapy*"]
+
+[tool.setuptools.package-data]
+platefeapy = ["py.typed"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

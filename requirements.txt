@@ -1,0 +1,8 @@
+# dipendenze base
+numpy>=1.24
+scipy>=1.10
+# grafici (extra 'plot')
+plotly>=6.1.1
+kaleido>=1.0
+# test
+pytest>=7.0

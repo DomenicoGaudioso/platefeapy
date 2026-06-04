@@ -39,35 +39,89 @@ def plot_mesh(model, show_node_ids: bool = True) -> go.Figure:
 
 
 def plot_deformed(result, scale: float = 1.0, n: int = 21) -> go.Figure:
-    """Superficie deformata della piastra."""
+    """Superficie deformata della piastra con mesh colorata."""
     model = result.model
     fig = go.Figure()
 
     all_x, all_y, all_z = [], [], []
-    for eid in model.elements:
-        di = postprocess.element_displacements(result, eid, n=n)
-        all_x.extend(di["x"])
-        all_y.extend(di["y"])
-        all_z.extend(di["w"] * scale)
+    all_i, all_j, all_k = [], [], []
+    all_colors = []
+    offset = 0
 
-    fig.add_trace(go.Scatter3d(
+    for eid in model.elements:
+        el = model.elements[eid]
+        coords = el._coords()
+        ed = el.global_dofs(model.dof_map)
+        u_elem = result.U[ed]
+
+        pts_1d = np.linspace(-1.0, 1.0, n)
+        elem_x, elem_y, elem_z, elem_w = [], [], [], []
+        for xi in pts_1d:
+            for eta in pts_1d:
+                N = el._shape_functions(xi, eta)
+                x = float(N @ coords[:, 0])
+                y = float(N @ coords[:, 1])
+                w = float(N @ u_elem[0::3])
+                elem_x.append(x)
+                elem_y.append(y)
+                elem_z.append(w * scale)
+                elem_w.append(w)
+
+        base = offset
+        all_x.extend(elem_x)
+        all_y.extend(elem_y)
+        all_z.extend(elem_z)
+        all_colors.extend(elem_w)
+
+        for ii in range(n - 1):
+            for jj in range(n - 1):
+                p0 = base + ii * n + jj
+                p1 = base + ii * n + jj + 1
+                p2 = base + (ii + 1) * n + jj + 1
+                p3 = base + (ii + 1) * n + jj
+                all_i.extend([p0, p0])
+                all_j.extend([p1, p3])
+                all_k.extend([p2, p2])
+
+        offset += n * n
+
+    z_arr = np.array(all_z)
+    c_arr = np.array(all_colors)
+    c_min, c_max = float(c_arr.min()), float(c_arr.max())
+    if c_max - c_min < 1e-30:
+        c_max = c_min + 1.0
+
+    face_colors = []
+    for fi in range(len(all_i)):
+        avg_c = (c_arr[all_i[fi]] + c_arr[all_j[fi]] + c_arr[all_k[fi]]) / 3.0
+        t = (avg_c - c_min) / (c_max - c_min)
+        r = int(max(0, min(255, 59 + t * (220 - 59))))
+        g = int(max(0, min(255, 76 + (1.0 - abs(2 * t - 1)) * 140)))
+        b = int(max(0, min(255, 192 + (1 - t) * (50 - 192))))
+        face_colors.append(f"rgb({r},{g},{b})")
+
+    fig.add_trace(go.Mesh3d(
         x=all_x, y=all_y, z=all_z,
-        mode="markers", marker=dict(size=2, color=all_z, colorscale="RdYlBu"),
+        i=all_i, j=all_j, k=all_k,
+        facecolor=face_colors,
+        opacity=1.0,
+        flatshading=True,
         showlegend=False,
+        hoverinfo="skip",
     ))
 
     for el in model.elements.values():
         coords = el._coords()
         ed = el.global_dofs(model.dof_map)
         w_nodes = result.U[ed][0::3] * scale
-        for i in range(4):
-            j = (i + 1) % 4
+        for ii in range(4):
+            jj = (ii + 1) % 4
             fig.add_trace(go.Scatter3d(
-                x=[coords[i, 0], coords[j, 0]],
-                y=[coords[i, 1], coords[j, 1]],
-                z=[w_nodes[i], w_nodes[j]],
-                mode="lines", line=dict(color="#444", width=3),
-                showlegend=False,
+                x=[coords[ii, 0], coords[jj, 0]],
+                y=[coords[ii, 1], coords[jj, 1]],
+                z=[w_nodes[ii], w_nodes[jj]],
+                mode="lines", line=dict(color="rgba(0,0,0,0.4)", width=2),
+                showlegend=False, hoverinfo="skip",
             ))
 
     fig.update_layout(
@@ -165,32 +219,89 @@ def plot_reactions(result, scale: float = 1.0) -> go.Figure:
 
 def plot_mode(modal_result, i: int = 0, scale: float = 1.0,
               n: int = 21) -> go.Figure:
-    """Disegna la i-esima forma modale."""
+    """Disegna la i-esima forma modale con mesh colorata."""
     model = modal_result.model
     phi_i = modal_result.phi[:, i]
 
     fig = go.Figure()
     all_x, all_y, all_z = [], [], []
+    all_i, all_j, all_k = [], [], []
+    all_colors = []
+    offset = 0
+
     for eid, el in model.elements.items():
         coords = el._coords()
         ed = el.global_dofs(model.dof_map)
         w_nodes = phi_i[ed][0::3] * scale
+
         pts_1d = np.linspace(-1.0, 1.0, n)
+        elem_x, elem_y, elem_z, elem_w = [], [], [], []
         for xi in pts_1d:
             for eta in pts_1d:
                 N = el._shape_functions(xi, eta)
                 x = float(N @ coords[:, 0])
                 y = float(N @ coords[:, 1])
                 w = float(N @ w_nodes)
-                all_x.append(x)
-                all_y.append(y)
-                all_z.append(w)
+                elem_x.append(x)
+                elem_y.append(y)
+                elem_z.append(w)
+                elem_w.append(w)
 
-    fig.add_trace(go.Scatter3d(
+        base = offset
+        all_x.extend(elem_x)
+        all_y.extend(elem_y)
+        all_z.extend(elem_z)
+        all_colors.extend(elem_w)
+
+        for ii in range(n - 1):
+            for jj in range(n - 1):
+                p0 = base + ii * n + jj
+                p1 = base + ii * n + jj + 1
+                p2 = base + (ii + 1) * n + jj + 1
+                p3 = base + (ii + 1) * n + jj
+                all_i.extend([p0, p0])
+                all_j.extend([p1, p3])
+                all_k.extend([p2, p2])
+
+        offset += n * n
+
+    c_arr = np.array(all_colors)
+    c_min, c_max = float(c_arr.min()), float(c_arr.max())
+    if c_max - c_min < 1e-30:
+        c_max = c_min + 1.0
+
+    face_colors = []
+    for fi in range(len(all_i)):
+        avg_c = (c_arr[all_i[fi]] + c_arr[all_j[fi]] + c_arr[all_k[fi]]) / 3.0
+        t = (avg_c - c_min) / (c_max - c_min)
+        r = int(max(0, min(255, 59 + t * (220 - 59))))
+        g = int(max(0, min(255, 76 + (1.0 - abs(2 * t - 1)) * 140)))
+        b = int(max(0, min(255, 192 + (1 - t) * (50 - 192))))
+        face_colors.append(f"rgb({r},{g},{b})")
+
+    fig.add_trace(go.Mesh3d(
         x=all_x, y=all_y, z=all_z,
-        mode="markers", marker=dict(size=2, color=all_z, colorscale="RdYlBu"),
+        i=all_i, j=all_j, k=all_k,
+        facecolor=face_colors,
+        opacity=1.0,
+        flatshading=True,
         showlegend=False,
+        hoverinfo="skip",
     ))
+
+    for el in model.elements.values():
+        coords = el._coords()
+        ed = el.global_dofs(model.dof_map)
+        w_nodes = phi_i[ed][0::3] * scale
+        for ii in range(4):
+            jj = (ii + 1) % 4
+            fig.add_trace(go.Scatter3d(
+                x=[coords[ii, 0], coords[jj, 0]],
+                y=[coords[ii, 1], coords[jj, 1]],
+                z=[w_nodes[ii], w_nodes[jj]],
+                mode="lines", line=dict(color="rgba(0,0,0,0.4)", width=2),
+                showlegend=False, hoverinfo="skip",
+            ))
 
     f = modal_result.freq[i]
     fig.update_layout(

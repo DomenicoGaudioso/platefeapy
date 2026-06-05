@@ -19,7 +19,7 @@ deformate amplificate, iso-linee e mappe di momento.
 | [CS01](cs01-ss-navier) | Piastra SS uniforme (Navier) | `w = 0.00406 p L^4 / D` |
 | [CS02](cs02-clamped) | Piastra incastrata uniforme | `w = 0.00126 p L^4 / D` |
 | [CS03](cs03-levy) | Piastra Levy (2 SS, 2 liberi) | Timoshenko Tab. 3 |
-| [CS04](cs04-circular) | Piastra circolare con mesh mappata | Timoshenko, piastra circolare |
+| [CS04](cs04-circular) | Piastra circolare meshata con Gmsh | Timoshenko, piastra circolare |
 | [CS05](cs05-rectangular-aspect) | Piastra rettangolare - aspect ratio | Timoshenko Tab. 2 |
 | [CS06](cs06-patch-load) | Piastra SS con carico parziale | Timoshenko Tab. 5 |
 | [CS07](cs07-cantilever-plate) | Piastra cantilever (1 lato incastrato) | Timoshenko Tab. 30 |
@@ -57,7 +57,7 @@ standalone con `python casestudies/csNN_*.py`.
 | CS01 SS Navier | < 1% | Convergenza monotona |
 | CS02 Clamped | < 1% | Convergenza monotona |
 | CS03 Levy quadrata | ~40% | Caso difficile per Q4 |
-| CS04 Circolare SS | ~15% | Mesh mappata sul disco, senza rettangolo esterno |
+| CS04 Circolare SS | ~19% | Mesh Gmsh Q4 circolare, senza rettangolo esterno |
 | CS05 Aspect ratio | < 10% | Errore cresce per a/b << 1 |
 | CS06 Patch load | ~70% | Errore di discretizzazione del patch |
 | CS07 Cantilever | < 10% | Convergenza lenta vicino all'incastro |
@@ -66,7 +66,7 @@ standalone con `python casestudies/csNN_*.py`.
 | CS10 Settlement | esatto | `w = -0.001 m` applicato al nodo |
 | CS11 Kirch/Mindlin | diverge | Kirchhoff ACM = thin only |
 | CS12 Patch test | < 1e-10 | Errore macchina |
-| CS13 Ciminiera | qualitativo | Mesh generica con foro e vincoli/reazioni |
+| CS13 Ciminiera | qualitativo | Sviluppo piano confrontato con volumfeapy CS12 |
 
 I casi con errore elevato sono noti nella letteratura FEM come casi difficili
 per elementi a basso ordine. La libreria li mantiene per mostrare chiaramente

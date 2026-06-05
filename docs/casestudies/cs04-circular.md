@@ -6,7 +6,7 @@ nav_order: 54
 permalink: /casestudies/cs04-circular/
 ---
 
-# CS04 - Piastra circolare con mesh mappata
+# CS04 - Piastra circolare meshata con Gmsh
 
 ## Caso di letteratura
 
@@ -25,17 +25,20 @@ w_\max^{SS} = \frac{(3+\nu)\, p\, R^4}{64 (1-\nu) D}
 w_\max^{clamped} = \frac{p\, R^4}{64\, D}
 $$
 
-## Mesh generica
+## Mesh Gmsh
 
-Il caso non usa piu' una griglia rettangolare tagliata. La mesh nasce da una
-griglia logica Q4 mappata direttamente nel disco tramite una trasformazione
-quadrato-disco concentrica. Tutti gli elementi appartengono alla piastra e il
-bordo esterno e' il cerchio discretizzato.
+Il caso non usa piu' una griglia rettangolare tagliata. La mesh viene generata
+con **Gmsh** come dominio circolare nativo a quadrilateri: un nucleo centrale
+Q4 e quattro patch anulari ricombinate. Tutti gli elementi appartengono alla
+piastra e il bordo esterno e' costituito da archi circolari discretizzati dal
+meshatore.
 
 ```python
-x, y = square_to_disk(a, b, R)
-m.add_node(nid, x, y)
-m.add_plate(eid, [n1, n2, n3, n4], mat, sec)
+nodes, quads = generate_gmsh_disk_quads(R, n_el)
+for nid, (x, y) in enumerate(nodes, start=1):
+    m.add_node(nid, x, y)
+for eid, quad in enumerate(quads, start=1):
+    m.add_plate(eid, quad, mat, sec)
 ```
 
 ## Visualizzazione
@@ -50,10 +53,10 @@ m.add_plate(eid, [n1, n2, n3, n4], mat, sec)
 
 ## Risultati
 
-| BC | w_max esatto | w_max FEM (32x32) | err % |
+| BC | w_max esatto | w_max FEM (Gmsh 32) | err % |
 |----|--------------|-------------------|-------|
-| SS (w=0) | 3.8304e-03 | 3.2580e-03 | 14.94% |
-| Incastrata | 8.1250e-04 | 7.7166e-04 | 5.03% |
+| SS (w=0) | 3.8304e-03 | 4.5649e-03 | 19.18% |
+| Incastrata | 8.1250e-04 | 8.8884e-04 | 9.40% |
 
 ## Momenti flettenti
 
@@ -63,11 +66,11 @@ m.add_plate(eid, [n1, n2, n3, n4], mat, sec)
 
 ## Discussione
 
-La nuova mesh elimina il rettangolo esterno e migliora nettamente il caso SS
-rispetto al vecchio ritaglio su griglia cartesiana. Resta una discrepanza
-residua dovuta all'uso di soli elementi Q4 rettilinei e alla rappresentazione
-del bordo circolare con lati poligonali. Il caso incastrato converge meglio
-perche' il bordo ha anche le rotazioni bloccate.
+La mesh Gmsh elimina il rettangolo esterno e rende il dominio davvero
+circolare. La discrepanza residua dipende dalla formulazione Q4 a basso ordine,
+dalla ricombinazione in quadrilateri e dalla discretizzazione del bordo curvo
+con lati rettilinei. Il caso resta utile per verificare che Platefeapy possa
+lavorare su mesh non cartesiane generate da un meshatore esterno.
 
 ## Script
 

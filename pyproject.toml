@@ -34,8 +34,9 @@ dependencies = [
 
 [project.optional-dependencies]
 plot = ["plotly>=6.1.1", "kaleido>=1.0"]
-all = ["plotly>=6.1.1", "kaleido>=1.0"]
-dev = ["pytest>=7.0", "plotly>=6.1.1", "kaleido>=1.0"]
+mesh = ["gmsh>=4.12"]
+all = ["plotly>=6.1.1", "kaleido>=1.0", "gmsh>=4.12"]
+dev = ["pytest>=7.0", "plotly>=6.1.1", "kaleido>=1.0", "gmsh>=4.12"]
 
 [project.urls]
 Homepage = "https://github.com/DomenicoGaudioso/platefeapy"

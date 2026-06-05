@@ -181,9 +181,11 @@ def test_circular_case_mesh_stays_inside_disk():
 
     R = 1.0
     m, elems, node_ids, boundary_ids = build_circular_plate(R, 12, bc="ss")
+    used_nodes = {nid for elem in m.elements.values() for nid in elem.node_ids}
 
-    assert len(elems) == 12 * 12
+    assert len(elems) > 12 * 12
     assert len(node_ids) == len(m.nodes)
+    assert used_nodes == set(m.nodes)
     assert all(np.hypot(node.x, node.y) <= R + 1e-12 for node in m.nodes.values())
     assert boundary_ids
 

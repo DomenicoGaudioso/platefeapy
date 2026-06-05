@@ -9,9 +9,10 @@ nav_order: 1
 
 ## Requirements
 
-- Python ≥ 3.9
-- numpy ≥ 1.24
-- scipy ≥ 1.10
+- Python >= 3.9
+- numpy >= 1.24
+- scipy >= 1.10
+- gmsh >= 4.12 for Gmsh-backed case-study meshes
 
 ## Installation
 
@@ -23,7 +24,7 @@ cd platefeapy
 pip install -e ".[all]"
 ```
 
-### Base dependencies only (numpy + scipy)
+### Base dependencies only
 
 ```bash
 pip install -e .
@@ -34,14 +35,16 @@ pip install -e .
 | Extra | Packages | Description |
 |-------|----------|-------------|
 | `plot` | plotly, kaleido | Interactive Plotly charts |
-| `all` | plotly, kaleido | Everything |
-| `dev` | plotly, kaleido, pytest | Development + tests |
+| `mesh` | gmsh | Gmsh mesh generation |
+| `all` | plotly, kaleido, gmsh | Everything |
+| `dev` | plotly, kaleido, gmsh, pytest | Development + tests |
 
 Example:
 
 ```bash
 pip install -e ".[all]"       # everything
 pip install -e ".[plot]"      # charts only
+pip install -e ".[mesh]"      # Gmsh meshing only
 ```
 
 ## Verify installation
@@ -68,7 +71,10 @@ The `plot` extra is not installed. Run:
 pip install -e ".[all]"
 ```
 
-### ValueError: Jacobiano singolare
+### ImportError: gmsh not found
 
-Check that element nodes are not collinear or degenerate. Quadrilateral elements
-require 4 non-collinear nodes forming a valid quadrilateral.
+The `mesh` extra is not installed. Run:
+
+```bash
+pip install -e ".[mesh]"
+```

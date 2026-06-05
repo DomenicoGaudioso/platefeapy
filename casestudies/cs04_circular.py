@@ -1,12 +1,11 @@
-"""Caso studio CS04: piastra circolare con mesh mappata sul disco.
+"""Caso studio CS04: piastra circolare meshata con Gmsh.
 
 Riferimento classico: Timoshenko & Woinowsky-Krieger, "Theory of Plates and
 Shells", formule per piastra circolare soggetta a pressione uniforme.
 
-La mesh non nasce piu' da un rettangolo tagliato: ogni nodo della griglia
-logica viene mappato direttamente sul disco con una trasformazione
-quadrato-disco. Il bordo esterno e' quindi il cerchio discretizzato e non
-rimangono elementi rettangolari esterni alla piastra.
+La mesh e' generata con Gmsh come dominio circolare nativo a quadrilateri:
+un nucleo centrale e quattro patch anulari ricombinate. Il bordo esterno e'
+un cerchio discretizzato da archi Gmsh, non un rettangolo ritagliato.
 """
 from __future__ import annotations
 
@@ -15,8 +14,6 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
-
-import numpy as np
 
 from platefeapy import Material, Model, ShellSection
 from platefeapy.plotting import (
@@ -43,17 +40,97 @@ except ImportError:  # pragma: no cover - standalone execution
     )
 
 
-def _square_to_disk(a: float, b: float, R: float) -> tuple[float, float]:
-    """Mappa concentrica di Shirley-Chiu da [-1,1]^2 al disco di raggio R."""
-    if abs(a) < 1e-15 and abs(b) < 1e-15:
-        return 0.0, 0.0
-    if abs(a) > abs(b):
-        r = a
-        theta = (np.pi / 4.0) * (b / a)
-    else:
-        r = b
-        theta = (np.pi / 2.0) - (np.pi / 4.0) * (a / b)
-    return float(R * r * np.cos(theta)), float(R * r * np.sin(theta))
+def _import_gmsh():
+    try:
+        import gmsh  # type: ignore[import-not-found]
+    except ImportError as exc:  # pragma: no cover - depends on optional extra
+        raise ImportError(
+            "CS04 richiede Gmsh: installare `pip install gmsh` oppure "
+            "`pip install -e .[mesh]`."
+        ) from exc
+    return gmsh
+
+
+def _generate_gmsh_disk_quads(R: float, n_el: int) -> tuple[list[tuple[float, float]], list[list[int]]]:
+    """Genera una mesh Q4 circolare con Gmsh e restituisce nodi e quadrilateri."""
+    gmsh = _import_gmsh()
+    already_initialized = bool(getattr(gmsh, "isInitialized", lambda: 0)())
+    if not already_initialized:
+        gmsh.initialize()
+    try:
+        gmsh.option.setNumber("General.Terminal", 0)
+        gmsh.clear()
+        gmsh.model.add("platefeapy_circular_plate")
+
+        n_outer = max(16, int(n_el))
+        n_radial = max(4, int(round(n_el / 4)))
+        a = 0.22 * R
+
+        inner_pts = [
+            gmsh.model.geo.addPoint(-a, -a, 0.0),
+            gmsh.model.geo.addPoint(a, -a, 0.0),
+            gmsh.model.geo.addPoint(a, a, 0.0),
+            gmsh.model.geo.addPoint(-a, a, 0.0),
+        ]
+        outer_pts = [
+            gmsh.model.geo.addPoint(0.0, -R, 0.0),
+            gmsh.model.geo.addPoint(R, 0.0, 0.0),
+            gmsh.model.geo.addPoint(0.0, R, 0.0),
+            gmsh.model.geo.addPoint(-R, 0.0, 0.0),
+        ]
+        center = gmsh.model.geo.addPoint(0.0, 0.0, 0.0)
+
+        inner_lines = []
+        for i in range(4):
+            line = gmsh.model.geo.addLine(inner_pts[i], inner_pts[(i + 1) % 4])
+            gmsh.model.geo.mesh.setTransfiniteCurve(line, n_outer + 1)
+            inner_lines.append(line)
+
+        center_loop = gmsh.model.geo.addCurveLoop(inner_lines)
+        center_surface = gmsh.model.geo.addPlaneSurface([center_loop])
+        gmsh.model.geo.mesh.setTransfiniteSurface(center_surface)
+        gmsh.model.geo.mesh.setRecombine(2, center_surface)
+
+        for i in range(4):
+            conn_a = gmsh.model.geo.addLine(inner_pts[i], outer_pts[i])
+            arc = gmsh.model.geo.addCircleArc(outer_pts[i], center, outer_pts[(i + 1) % 4])
+            conn_b = gmsh.model.geo.addLine(inner_pts[(i + 1) % 4], outer_pts[(i + 1) % 4])
+            gmsh.model.geo.mesh.setTransfiniteCurve(conn_a, n_radial + 1)
+            gmsh.model.geo.mesh.setTransfiniteCurve(conn_b, n_radial + 1)
+            gmsh.model.geo.mesh.setTransfiniteCurve(arc, n_outer + 1)
+            loop = gmsh.model.geo.addCurveLoop([inner_lines[i], conn_b, -arc, -conn_a])
+            surface = gmsh.model.geo.addPlaneSurface([loop])
+            gmsh.model.geo.mesh.setTransfiniteSurface(surface)
+            gmsh.model.geo.mesh.setRecombine(2, surface)
+
+        gmsh.model.geo.synchronize()
+        gmsh.model.mesh.generate(2)
+
+        node_tags, node_coords, _ = gmsh.model.mesh.getNodes()
+        coord_by_tag = {
+            int(tag): (float(node_coords[3 * i]), float(node_coords[3 * i + 1]))
+            for i, tag in enumerate(node_tags)
+        }
+
+        quad_tags: list[list[int]] = []
+        element_types, _, element_node_tags = gmsh.model.mesh.getElements(2)
+        for gmsh_type, flat_nodes in zip(element_types, element_node_tags):
+            if int(gmsh_type) != 3:
+                continue
+            vals = [int(v) for v in flat_nodes]
+            for k in range(0, len(vals), 4):
+                quad_tags.append(vals[k:k + 4])
+        if not quad_tags:
+            raise RuntimeError("Gmsh non ha generato quadrilateri Q4 per CS04.")
+
+        used_tags = sorted({tag for quad in quad_tags for tag in quad})
+        tag_to_id = {tag: idx + 1 for idx, tag in enumerate(used_tags)}
+        nodes = [coord_by_tag[tag] for tag in used_tags]
+        quads = [[tag_to_id[tag] for tag in quad] for quad in quad_tags]
+        return nodes, quads
+    finally:
+        if not already_initialized:
+            gmsh.finalize()
 
 
 def build_circular_plate(R: float, n_el: int, bc: str, theory: str = "mindlin"):
@@ -61,46 +138,23 @@ def build_circular_plate(R: float, n_el: int, bc: str, theory: str = "mindlin"):
 
     bc: 'ss' oppure 'clamped'
     """
-    if n_el < 4:
-        raise ValueError("n_el deve essere almeno 4")
+    if n_el < 8:
+        raise ValueError("n_el deve essere almeno 8")
 
     m = Model()
-    n = n_el + 1
-    nid_grid: dict[tuple[int, int], int] = {}
-    nid = 1
-    for j in range(n):
-        b = -1.0 + 2.0 * j / n_el
-        for i in range(n):
-            a = -1.0 + 2.0 * i / n_el
-            x, y = _square_to_disk(a, b, R)
-            m.add_node(nid, x, y)
-            nid_grid[(i, j)] = nid
-            nid += 1
+    nodes, quads = _generate_gmsh_disk_quads(R, n_el)
+    for nid, (x, y) in enumerate(nodes, start=1):
+        m.add_node(nid, x, y)
 
     mat = Material(E=210e9, nu=0.3)
     sec = ShellSection(t=0.01)
 
-    eid = 1
-    for j in range(n_el):
-        for i in range(n_el):
-            m.add_plate(
-                eid,
-                [
-                    nid_grid[(i, j)],
-                    nid_grid[(i + 1, j)],
-                    nid_grid[(i + 1, j + 1)],
-                    nid_grid[(i, j + 1)],
-                ],
-                mat,
-                sec,
-                theory=theory,
-            )
-            eid += 1
+    for eid, quad in enumerate(quads, start=1):
+        m.add_plate(eid, quad, mat, sec, theory=theory)
 
     boundary_ids = {
-        node_id
-        for (i, j), node_id in nid_grid.items()
-        if i in (0, n_el) or j in (0, n_el)
+        nid for nid, node in m.nodes.items()
+        if abs((node.x ** 2 + node.y ** 2) ** 0.5 - R) <= max(1e-8, 1e-6 * R)
     }
     for node_id in boundary_ids:
         if bc == "ss":
@@ -119,10 +173,10 @@ def main() -> None:
     E, nu, t = 210e9, 0.3, 0.01
     D = D_bending(E, nu, t)
 
-    header("CS04 - Piastra circolare con mesh mappata")
+    header("CS04 - Piastra circolare meshata con Gmsh")
     print(f"  R = {R} m, t = {t} m, p = {p} Pa, E = {E:.2e} Pa, nu = {nu}")
     print(f"  D = {D:.4e} N m")
-    print("  Mesh: Q4 mappata sul disco, senza rettangolo esterno")
+    print("  Mesh: Gmsh Q4 circolare nativa, senza rettangolo esterno")
     print()
 
     for bc_label, bc in [("SS (w=0)", "ss"), ("Incastrata (w=0, dw/dr=0)", "clamped")]:

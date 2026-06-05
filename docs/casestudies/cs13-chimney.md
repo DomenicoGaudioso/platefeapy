@@ -76,6 +76,22 @@ Il controllo di equilibrio globale sui carichi trasversali risulta nullo entro
 la precisione numerica del modello. La deformata viene amplificata di `10x` per
 rendere leggibile la forma; la legenda dello spostamento riporta i valori reali.
 
+## Confronto con volumfeapy
+
+Lo stesso caso e' stato modellato anche in **volumfeapy** come fusto solido
+cilindrico rastremato con elementi Hex8, apertura di servizio, base incastrata
+e carico vento equivalente sui nodi della superficie esterna.
+
+| Modello | Idealizzazione | Elementi | Nodi | Spostamento di confronto |
+|---------|----------------|----------|------|--------------------------|
+| platefeapy CS13 | sviluppo piano equivalente Q4 | 624 | 684 | max \|w\| = 1.6183 m |
+| volumfeapy CS12 | solido cilindrico Hex8 | 142 | 312 | max \|u_radiale\| = 3.0069e-03 m |
+
+La differenza non indica un errore numerico: il modello plate lavora sullo
+sviluppo piano della parete e non include la rigidezza membranale/circonferenziale
+del cilindro chiuso. Il modello volumetrico, invece, mantiene la geometria
+cilindrica e quindi risulta molto piu' rigido sotto la stessa legge di vento.
+
 ## Script
 
 `casestudies/cs13_chimney.py`

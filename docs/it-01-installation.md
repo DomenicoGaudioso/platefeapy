@@ -9,9 +9,10 @@ nav_order: 1
 
 ## Requisiti
 
-- Python ≥ 3.9
-- numpy ≥ 1.24
-- scipy ≥ 1.10
+- Python >= 3.9
+- numpy >= 1.24
+- scipy >= 1.10
+- gmsh >= 4.12 per le mesh dei casi studio generate con Gmsh
 
 ## Installazione
 
@@ -23,7 +24,7 @@ cd platefeapy
 pip install -e ".[all]"
 ```
 
-### Solo dipendenze base (numpy + scipy)
+### Solo dipendenze base
 
 ```bash
 pip install -e .
@@ -34,14 +35,16 @@ pip install -e .
 | Extra | Pacchetti | Descrizione |
 |-------|-----------|-------------|
 | `plot` | plotly, kaleido | Grafici interattivi Plotly |
-| `all` | plotly, kaleido | Tutto |
-| `dev` | plotly, kaleido, pytest | Sviluppo + test |
+| `mesh` | gmsh | Generazione mesh con Gmsh |
+| `all` | plotly, kaleido, gmsh | Tutto |
+| `dev` | plotly, kaleido, gmsh, pytest | Sviluppo + test |
 
 Esempio:
 
 ```bash
 pip install -e ".[all]"       # tutto
 pip install -e ".[plot]"      # solo grafici
+pip install -e ".[mesh]"      # solo meshing Gmsh
 ```
 
 ## Verifica installazione
@@ -62,13 +65,16 @@ python -m pytest tests -q
 
 ### ImportError: plotly non trovato
 
-L'extra `plot` non è installato. Eseguire:
+L'extra `plot` non e' installato. Eseguire:
 
 ```bash
 pip install -e ".[all]"
 ```
 
-### ValueError: Jacobiano singolare
+### ImportError: gmsh non trovato
 
-Verificare che i nodi dell'elemento non siano collineari o degeneri. Gli elementi
-quadrilaterali richiedono 4 nodi non collineari che formino un quadrilatero valido.
+L'extra `mesh` non e' installato. Eseguire:
+
+```bash
+pip install -e ".[mesh]"
+```

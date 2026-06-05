@@ -116,12 +116,14 @@ M1, M2, alpha = postprocess.principal_moments(Mx, My, Mxy)
 ```python
 from platefeapy.plotting import (
     plot_mesh, plot_deformed, plot_contour,
-    plot_reactions, plot_mode,
+    plot_supports, plot_reactions, plot_mode,
 )
 
 plot_mesh(m).show()
+plot_supports(m).show()
 plot_deformed(res, scale=100).show()
 plot_contour(res, "Mx").show()
+plot_reactions(res).show()
 ```
 
 ## Conventions

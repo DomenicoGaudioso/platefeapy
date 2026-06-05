@@ -36,6 +36,7 @@ def main():
         ("CS10 - Cedimento vincolare",       "cs10_settlement"),
         ("CS11 - Kirchhoff vs Mindlin",      "cs11_kirchhoff_vs_mindlin"),
         ("CS12 - Patch test",                "cs12_patch_test"),
+        ("CS13 - Ciminiera rastremata",      "cs13_chimney"),
     ]
 
     for label, module_name in cases:

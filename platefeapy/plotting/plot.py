@@ -334,6 +334,41 @@ def plot_reactions(result, scale: float = 1.0) -> go.Figure:
     return fig
 
 
+def plot_supports(model) -> go.Figure:
+    """Visualizza i vincoli applicati ai nodi della piastra."""
+    fig = plot_mesh(model, show_node_ids=False)
+    constrained: dict[int, list[str]] = {}
+    from platefeapy.loads import DOF_NAMES
+
+    for nid, dofs in model.dof_map.items():
+        active = [
+            DOF_NAMES[i]
+            for i, gi in enumerate(dofs)
+            if gi in model._prescribed
+        ]
+        if active:
+            constrained[nid] = active
+
+    if constrained:
+        xs = [model.nodes[nid].x for nid in constrained]
+        ys = [model.nodes[nid].y for nid in constrained]
+        txt = [
+            f"nodo {nid}<br>vincoli: {', '.join(dofs)}"
+            for nid, dofs in constrained.items()
+        ]
+        fig.add_trace(go.Scatter(
+            x=xs, y=ys, mode="markers",
+            marker=dict(size=10, color="#111", symbol="diamond"),
+            text=txt,
+            hovertemplate="%{text}<extra></extra>",
+            name="Vincoli",
+            showlegend=True,
+        ))
+
+    fig.update_layout(title="Vincoli")
+    return fig
+
+
 def plot_mode(modal_result, i: int = 0, scale: float = 1.0,
               n: int = 21) -> go.Figure:
     """Disegna la i-esima forma modale con riferimento trasparente."""

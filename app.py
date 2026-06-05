@@ -272,13 +272,22 @@ def tab_risultati():
     if last == "Statica" and st.session_state.result is not None:
         res = st.session_state.result
         try:
-            from platefeapy.plotting import plot_deformed, plot_contour
-            what = st.radio("Visualizza", ["Deformata", "Mx", "My", "Mxy", "Qx", "Qy", "w"],
-                            horizontal=True)
+            from platefeapy.plotting import (
+                plot_contour, plot_deformed, plot_reactions, plot_supports,
+            )
+            what = st.radio(
+                "Visualizza",
+                ["Deformata", "Vincoli", "Reazioni", "Mx", "My", "Mxy", "Qx", "Qy", "w"],
+                horizontal=True,
+            )
             scale = st.number_input("Scala deformata", value=100.0)
             show_isolines = st.checkbox("Mostra iso-linee", value=True)
             if what == "Deformata":
                 fig = plot_deformed(res, scale=scale)
+            elif what == "Vincoli":
+                fig = plot_supports(m)
+            elif what == "Reazioni":
+                fig = plot_reactions(res)
             else:
                 fig = plot_contour(res, component=what, show_isolines=show_isolines)
             st.plotly_chart(fig, use_container_width=True)

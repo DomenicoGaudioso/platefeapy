@@ -7,7 +7,7 @@ nav_order: 9
 
 # 09 - Grafici Plotly
 
-platefeapy fornisce 5 funzioni di visualizzazione interattiva basate su Plotly.
+platefeapy fornisce 6 funzioni di visualizzazione interattiva basate su Plotly.
 
 ## Installazione
 
@@ -71,6 +71,15 @@ Componenti disponibili: `Mx`, `My`, `Mxy`, `Qx`, `Qy`, `w`.
 La mappa usa valori colorati su `n×n` punti per elemento. Le iso-linee sono
 disegnate sulla stessa triangolazione campionata per evidenziare la
 separazione tra fasce di valore.
+
+### plot_supports(model)
+
+Nodi vincolati e gradi di liberta' attivi:
+
+```python
+from platefeapy.plotting import plot_supports
+plot_supports(m).show()
+```
 
 ### plot_reactions(result, scale=1.0)
 

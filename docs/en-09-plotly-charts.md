@@ -7,7 +7,7 @@ nav_order: 9
 
 # 09 - Plotly Charts
 
-platefeapy provides 5 interactive visualization functions based on Plotly.
+platefeapy provides 6 interactive visualization functions based on Plotly.
 
 ## Installation
 
@@ -71,6 +71,15 @@ Available components: `Mx`, `My`, `Mxy`, `Qx`, `Qy`, `w`.
 The contour is rendered as a scatter plot with color-coded values at `n×n`
 points per element. Iso-lines are drawn over the same sampled element
 triangulation to show the separation between value bands.
+
+### plot_supports(model)
+
+Constrained nodes and active DOFs:
+
+```python
+from platefeapy.plotting import plot_supports
+plot_supports(m).show()
+```
 
 ### plot_reactions(result, scale=1.0)
 

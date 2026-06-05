@@ -165,3 +165,41 @@ def test_plot_contour_adds_isolines():
     fig = plot_contour(res, "w", n=5, n_isolines=4)
 
     assert any(trace.type == "scatter" and trace.mode == "lines" for trace in fig.data)
+
+
+def test_plot_supports_adds_constrained_nodes():
+    m = _simply_supported_plate(n_elements=2)
+
+    from platefeapy.plotting import plot_supports
+    fig = plot_supports(m)
+
+    assert any(trace.name == "Vincoli" for trace in fig.data)
+
+
+def test_circular_case_mesh_stays_inside_disk():
+    from casestudies.cs04_circular import build_circular_plate
+
+    R = 1.0
+    m, elems, node_ids, boundary_ids = build_circular_plate(R, 12, bc="ss")
+
+    assert len(elems) == 12 * 12
+    assert len(node_ids) == len(m.nodes)
+    assert all(np.hypot(node.x, node.y) <= R + 1e-12 for node in m.nodes.values())
+    assert boundary_ids
+
+
+def test_chimney_case_has_opening_and_base_supports():
+    from casestudies.cs13_chimney import build_chimney_wall
+
+    m, elem_theta_z, meta = build_chimney_wall(nx=8, nz=12)
+    centers = []
+    for eid, el in m.elements.items():
+        coords = el._coords()
+        centers.append((coords[:, 0].mean(), coords[:, 1].mean()))
+
+    assert elem_theta_z
+    assert len(m.elements) < 8 * 12
+    assert any(abs(x) > 0.5 for x, _ in centers)
+    assert meta["base_nodes"]
+    assert all(len(set(m.dof_map[nid]).intersection(m._prescribed)) == 3
+               for nid in meta["base_nodes"])

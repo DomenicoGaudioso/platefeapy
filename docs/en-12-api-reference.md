@@ -15,7 +15,7 @@ Typical import:
 from platefeapy import Model, Material, ShellSection
 from platefeapy import postprocess
 from platefeapy.plotting import (plot_mesh, plot_deformed, plot_contour,
-                                  plot_reactions, plot_mode)
+                                  plot_supports, plot_reactions, plot_mode)
 ```
 
 ---
@@ -141,5 +141,6 @@ Requires the `plot` extra (`plotly`, `kaleido`). Each function returns a
 - **`plot_mesh(model, show_node_ids=True)`** — 2D mesh with node IDs.
 - **`plot_deformed(result, scale=1.0, n=21)`** — 3D deformed shape.
 - **`plot_contour(result, component="Mx", n=11, show_isolines=True)`** — 2D contour map with iso-lines.
+- **`plot_supports(model)`** — constrained nodes and active DOFs.
 - **`plot_reactions(result, scale=1.0)`** — support reactions.
 - **`plot_mode(modal_result, i=0, scale=1.0, n=21)`** — i-th mode shape.

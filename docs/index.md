@@ -81,6 +81,31 @@ fig.show()
 | Convergence study | `usage_examples/01_convergence_ss_plate.py` | Mesh refinement against a Navier analytical solution |
 | Modal analysis | `usage_examples/03_modal_analysis.py` | Natural frequencies and normalized mode shapes |
 
+## Literature Case Studies
+
+A complete set of **12 classical FEM benchmark cases** has been
+implemented and compared with analytical solutions (Navier, Timoshenko,
+Levy, etc.). Each case study is documented in the documentation site
+with model construction, deformed shape, stress contours, and numerical
+verification.
+
+[View all case studies →]({{ site.baseurl }}/casestudies/)
+
+| # | Case | Reference |
+|---|------|-----------|
+| CS01 | Square SS plate under UDL — Navier | Timoshenko §3 |
+| CS02 | Square clamped plate under UDL | Timoshenko §3 |
+| CS03 | Levy plate (2 SS, 2 free) | Timoshenko Tab. 3 |
+| CS04 | Circular plate (SS / clamped) | Timoshenko §3.4 |
+| CS05 | Rectangular plate — aspect ratio | Timoshenko Tab. 2 |
+| CS06 | Patch load on SS plate | Timoshenko Tab. 5 |
+| CS07 | Cantilever plate | Timoshenko Tab. 30 |
+| CS08 | Concentrated load on SS plate | Timoshenko Tab. 4 |
+| CS09 | Thermal gradient through thickness | Curvature imposed |
+| CS10 | Support settlement | Kinematic imposition |
+| CS11 | Kirchhoff vs Mindlin (thin/thick) | — |
+| CS12 | Patch test (linear field) | Exact by construction |
+
 Use `scale` only to make the deformed geometry readable in the figure. The
 reported displacements, hover values and color legend remain unscaled analysis
 results.

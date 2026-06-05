@@ -17,6 +17,30 @@ The `usage_examples/` directory contains self-contained scripts covering every f
 | 02 | `02_clamped_plate.py` | Clamped plate under uniform pressure |
 | 03 | `03_modal_analysis.py` | Modal analysis of a simply supported plate |
 
+## Literature Case Studies
+
+A complete set of **12 classical FEM benchmark cases** is available in
+the `casestudies/` directory, with full documentation and images on the
+website. Each case study is compared with an analytical reference
+solution from the literature (Navier, Timoshenko, Levy, etc.).
+
+| # | Case | Reference |
+|---|------|-----------|
+| CS01 | Square SS plate under UDL — Navier | Timoshenko §3 |
+| CS02 | Square clamped plate under UDL | Timoshenko §3 |
+| CS03 | Levy plate (2 SS, 2 free) | Timoshenko Tab. 3 |
+| CS04 | Circular plate (SS / clamped) | Timoshenko §3.4 |
+| CS05 | Rectangular plate — aspect ratio | Timoshenko Tab. 2 |
+| CS06 | Patch load on SS plate | Timoshenko Tab. 5 |
+| CS07 | Cantilever plate | Timoshenko Tab. 30 |
+| CS08 | Concentrated load on SS plate | Timoshenko Tab. 4 |
+| CS09 | Thermal gradient through thickness | Curvature imposed |
+| CS10 | Support settlement | Kinematic imposition |
+| CS11 | Kirchhoff vs Mindlin (thin/thick) | — |
+| CS12 | Patch test (linear field) | Exact by construction |
+
+→ [Browse all case studies]({{ site.baseurl }}/casestudies/)
+
 ## Running examples
 
 ```bash

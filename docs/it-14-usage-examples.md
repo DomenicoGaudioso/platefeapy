@@ -18,6 +18,30 @@ le funzionalità.
 | 02 | `02_clamped_plate.py` | Piastra incastrata sotto pressione uniforme |
 | 03 | `03_modal_analysis.py` | Analisi modale di una piastra semplicemente appoggiata |
 
+## Casi studio dalla letteratura
+
+Un set completo di **12 casi benchmark classici della letteratura FEM**
+e' disponibile nella directory `casestudies/`, con documentazione
+completa e immagini nel sito web. Ogni caso e' confrontato con una
+soluzione analitica di riferimento (Navier, Timoshenko, Levy, ecc.).
+
+| # | Caso | Riferimento |
+|---|------|-------------|
+| CS01 | Piastra SS quadrata, UDL — Navier | Timoshenko §3 |
+| CS02 | Piastra incastrata quadrata, UDL | Timoshenko §3 |
+| CS03 | Piastra Levy (2 SS, 2 liberi) | Timoshenko Tab. 3 |
+| CS04 | Piastra circolare (SS / incastrata) | Timoshenko §3.4 |
+| CS05 | Piastra rettangolare - aspect ratio | Timoshenko Tab. 2 |
+| CS06 | Carico parziale su piastra SS | Timoshenko Tab. 5 |
+| CS07 | Piastra cantilever | Timoshenko Tab. 30 |
+| CS08 | Carico concentrato su SS | Timoshenko Tab. 4 |
+| CS09 | Gradiente termico attraverso lo spessore | Curvatura imposta |
+| CS10 | Cedimento vincolare | Imposizione cinematica |
+| CS11 | Kirchhoff vs Mindlin (thin/thick) | — |
+| CS12 | Patch test (campo lineare) | Esatto per costruzione |
+
+→ [Esplora tutti i casi studio]({{ site.baseurl }}/casestudies/)
+
 ## Esecuzione esempi
 
 ```bash

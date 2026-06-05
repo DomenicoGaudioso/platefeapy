@@ -12,7 +12,7 @@ Complete reference of all public functions in **platefeapy**.
 Typical import:
 
 ```python
-from platefeapy import Model, Material, ShellSection
+from platefeapy import Model, ShellModel, Material, ShellSection
 from platefeapy import postprocess
 from platefeapy.plotting import (plot_mesh, plot_deformed, plot_contour,
                                   plot_supports, plot_reactions, plot_mode)
@@ -51,6 +51,18 @@ Add a node (3 DOFs: `w, theta_x, theta_y`).
 Quadrilateral plate element (4 nodes).
 - `node_ids`: list of 4 node IDs (counter-clockwise order)
 - `theory`: `"mindlin"` (default, SRI) or `"kirchhoff"` (ACM)
+
+### `ShellModel()`
+Container for Q4 shells on real 3D geometry. Each node has 6 DOFs:
+`ux, uy, uz, rx, ry, rz`.
+
+### `ShellModel.add_node(id, x, y, z) -> ShellNode`
+Add a node in 3D space, on the real structural surface.
+
+### `ShellModel.add_shell(id, node_ids, material, section) -> ShellQ4`
+Add a quadrilateral shell element. The element builds its local basis from the
+3D geometry, combines membrane stiffness and Mindlin bending, then transforms
+the stiffness matrix to the global system.
 
 ### Constraints
 - **`fix(node, dofs=None)`** — restrain listed DOFs (`["w","theta_x","theta_y"]`); `None` = all 3 (clamped).
@@ -100,6 +112,13 @@ Modal analysis: solves `K φ = ω² M φ`. Requires `rho > 0` in materials.
 ---
 
 ## Results
+
+### `ShellResult`
+Attributes: `U` (global displacements), `R` (global reactions).
+
+- **`displacements(node) -> ndarray(6)`**: `[ux, uy, uz, rx, ry, rz]` of the node.
+- **`displacement(node, dof) -> float`**: single component.
+- **`reactions(node) -> ndarray(6)`**: `[Fx, Fy, Fz, Mx, My, Mz]` of the node.
 
 ### `Result`
 Attributes: `U` (global displacements), `R` (global reactions),

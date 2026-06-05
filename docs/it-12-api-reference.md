@@ -12,7 +12,7 @@ Riferimento completo di tutte le funzioni pubbliche in **platefeapy**.
 Import tipico:
 
 ```python
-from platefeapy import Model, Material, ShellSection
+from platefeapy import Model, ShellModel, Material, ShellSection
 from platefeapy import postprocess
 from platefeapy.plotting import (plot_mesh, plot_deformed, plot_contour,
                                   plot_supports, plot_reactions, plot_mode)
@@ -51,6 +51,18 @@ Aggiunge un nodo (3 GdL: `w, theta_x, theta_y`).
 Elemento piastra quadrilatero (4 nodi).
 - `node_ids`: lista di 4 ID nodo (ordine antiorario)
 - `theory`: `"mindlin"` (default, SRI) o `"kirchhoff"` (ACM)
+
+### `ShellModel()`
+Contenitore per shell Q4 su geometria 3D reale. Ogni nodo ha 6 GdL:
+`ux, uy, uz, rx, ry, rz`.
+
+### `ShellModel.add_node(id, x, y, z) -> ShellNode`
+Aggiunge un nodo nello spazio 3D, sulla superficie reale della struttura.
+
+### `ShellModel.add_shell(id, node_ids, materiale, sezione) -> ShellQ4`
+Aggiunge un elemento shell quadrilatero. L'elemento costruisce una terna locale
+dalla geometria 3D, combina membrana e flessione Mindlin e trasforma la
+rigidezza nel sistema globale.
 
 ### Vincoli
 - **`fix(nodo, dofs=None)`** — vincola i GdL elencati; `None` = tutti e 3 (incastro).
@@ -100,6 +112,13 @@ Analisi modale: risolve `K φ = ω² M φ`. Richiede `rho > 0` nei materiali.
 ---
 
 ## Risultati
+
+### `ShellResult`
+Attributi: `U` (spostamenti globali), `R` (reazioni globali).
+
+- **`displacements(nodo) -> ndarray(6)`**: `[ux, uy, uz, rx, ry, rz]` del nodo.
+- **`displacement(nodo, dof) -> float`**: singola componente.
+- **`reactions(nodo) -> ndarray(6)`**: `[Fx, Fy, Fz, Mx, My, Mz]` del nodo.
 
 ### `Result`
 Attributi: `U` (spostamenti globali), `R` (reazioni globali),

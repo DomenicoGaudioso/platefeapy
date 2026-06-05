@@ -3,9 +3,9 @@
 Riferimento classico: Timoshenko & Woinowsky-Krieger, "Theory of Plates and
 Shells", formule per piastra circolare soggetta a pressione uniforme.
 
-La mesh e' generata con Gmsh come dominio circolare nativo a quadrilateri:
-un nucleo centrale e quattro patch anulari ricombinate. Il bordo esterno e'
-un cerchio discretizzato da archi Gmsh, non un rettangolo ritagliato.
+La mesh e' generata con Gmsh come dominio circolare nativo a quadrilateri
+ricombinati. Il bordo esterno e' un cerchio discretizzato dal meshatore, non
+un rettangolo ritagliato.
 """
 from __future__ import annotations
 
@@ -62,48 +62,16 @@ def _generate_gmsh_disk_quads(R: float, n_el: int) -> tuple[list[tuple[float, fl
         gmsh.clear()
         gmsh.model.add("platefeapy_circular_plate")
 
-        n_outer = max(16, int(n_el))
-        n_radial = max(4, int(round(n_el / 4)))
-        a = 0.22 * R
+        disk = gmsh.model.occ.addDisk(0.0, 0.0, 0.0, R, R)
+        gmsh.model.occ.synchronize()
 
-        inner_pts = [
-            gmsh.model.geo.addPoint(-a, -a, 0.0),
-            gmsh.model.geo.addPoint(a, -a, 0.0),
-            gmsh.model.geo.addPoint(a, a, 0.0),
-            gmsh.model.geo.addPoint(-a, a, 0.0),
-        ]
-        outer_pts = [
-            gmsh.model.geo.addPoint(0.0, -R, 0.0),
-            gmsh.model.geo.addPoint(R, 0.0, 0.0),
-            gmsh.model.geo.addPoint(0.0, R, 0.0),
-            gmsh.model.geo.addPoint(-R, 0.0, 0.0),
-        ]
-        center = gmsh.model.geo.addPoint(0.0, 0.0, 0.0)
-
-        inner_lines = []
-        for i in range(4):
-            line = gmsh.model.geo.addLine(inner_pts[i], inner_pts[(i + 1) % 4])
-            gmsh.model.geo.mesh.setTransfiniteCurve(line, n_outer + 1)
-            inner_lines.append(line)
-
-        center_loop = gmsh.model.geo.addCurveLoop(inner_lines)
-        center_surface = gmsh.model.geo.addPlaneSurface([center_loop])
-        gmsh.model.geo.mesh.setTransfiniteSurface(center_surface)
-        gmsh.model.geo.mesh.setRecombine(2, center_surface)
-
-        for i in range(4):
-            conn_a = gmsh.model.geo.addLine(inner_pts[i], outer_pts[i])
-            arc = gmsh.model.geo.addCircleArc(outer_pts[i], center, outer_pts[(i + 1) % 4])
-            conn_b = gmsh.model.geo.addLine(inner_pts[(i + 1) % 4], outer_pts[(i + 1) % 4])
-            gmsh.model.geo.mesh.setTransfiniteCurve(conn_a, n_radial + 1)
-            gmsh.model.geo.mesh.setTransfiniteCurve(conn_b, n_radial + 1)
-            gmsh.model.geo.mesh.setTransfiniteCurve(arc, n_outer + 1)
-            loop = gmsh.model.geo.addCurveLoop([inner_lines[i], conn_b, -arc, -conn_a])
-            surface = gmsh.model.geo.addPlaneSurface([loop])
-            gmsh.model.geo.mesh.setTransfiniteSurface(surface)
-            gmsh.model.geo.mesh.setRecombine(2, surface)
-
-        gmsh.model.geo.synchronize()
+        mesh_size = 3.6 * R / max(12, int(n_el))
+        gmsh.option.setNumber("Mesh.Algorithm", 8)
+        gmsh.option.setNumber("Mesh.RecombineAll", 1)
+        gmsh.option.setNumber("Mesh.RecombinationAlgorithm", 2)
+        gmsh.option.setNumber("Mesh.SubdivisionAlgorithm", 1)
+        gmsh.model.mesh.setSize(gmsh.model.getEntities(0), mesh_size)
+        gmsh.model.mesh.setRecombine(2, disk)
         gmsh.model.mesh.generate(2)
 
         node_tags, node_coords, _ = gmsh.model.mesh.getNodes()

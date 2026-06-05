@@ -191,17 +191,19 @@ def test_circular_case_mesh_stays_inside_disk():
 
 
 def test_chimney_case_has_opening_and_base_supports():
-    from casestudies.cs13_chimney import build_chimney_wall
+    from casestudies.cs13_chimney import build_chimney_shell
 
-    m, elem_theta_z, meta = build_chimney_wall(nx=8, nz=12)
+    m, elem_theta_z, meta = build_chimney_shell(ntheta=8, nz=12)
     centers = []
     for eid, el in m.elements.items():
-        coords = el._coords()
-        centers.append((coords[:, 0].mean(), coords[:, 1].mean()))
+        coords = el._coords3d()
+        centers.append(coords.mean(axis=0))
 
     assert elem_theta_z
     assert len(m.elements) < 8 * 12
-    assert any(abs(x) > 0.5 for x, _ in centers)
+    assert any(abs(c[0]) > 0.5 for c in centers)
+    assert any(abs(c[1]) > 0.5 for c in centers)
+    assert max(c[2] for c in centers) > 50.0
     assert meta["base_nodes"]
-    assert all(len(set(m.dof_map[nid]).intersection(m._prescribed)) == 3
+    assert all(len(set(m.dof_map[nid]).intersection(m._prescribed)) == 6
                for nid in meta["base_nodes"])

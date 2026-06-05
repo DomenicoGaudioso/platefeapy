@@ -42,6 +42,7 @@ from .loads import (
     NodalLoad, PressureLoad, PatchLoad, ThermalLoad, Settlement,
 )
 from .model import Model, Result, ModalResult
+from .shell import ShellModel, ShellNode, ShellQ4, ShellResult
 from . import postprocess
 
 __all__ = [
@@ -58,6 +59,10 @@ __all__ = [
     "Model",
     "Result",
     "ModalResult",
+    "ShellModel",
+    "ShellNode",
+    "ShellQ4",
+    "ShellResult",
     "postprocess",
 ]
 

@@ -1,15 +1,4 @@
-"""Caso studio CS13: sviluppo piano di una ciminiera cilindrica sottile.
-
-Il modello rappresenta lo sviluppo equivalente della parete di una ciminiera
-in c.a. rastremata, con apertura di servizio alla base e pressione da vento
-variabile in altezza. E' un caso dimostrativo per mesh Q4 generiche: il dominio
-non e' rettangolare, contiene un foro e mantiene il fusto con larghezza
-circonferenziale variabile.
-
-Riferimenti ingegneristici usati come impostazione qualitativa:
-- ACI 307-23, Requirements for Reinforced Concrete Chimneys.
-- CICIND Model Code for Concrete Chimneys, Part A - The Shell.
-"""
+"""Caso studio CS13: ciminiera shell 3D rastremata con apertura."""
 from __future__ import annotations
 
 import sys
@@ -19,11 +8,9 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
 import numpy as np
+import plotly.graph_objects as go
 
-from platefeapy import Material, Model, ShellSection
-from platefeapy.plotting import (
-    plot_contour, plot_deformed, plot_mesh, plot_reactions, plot_supports,
-)
+from platefeapy import Material, ShellModel, ShellSection
 
 try:
     from .common import header, print_check, save_figure
@@ -35,68 +22,82 @@ def radius_at_height(z: float, H: float, r_base: float, r_top: float) -> float:
     return r_base + (r_top - r_base) * z / H
 
 
-def _node_xy(theta: float, z: float, H: float, r_base: float, r_top: float):
+def wind_pressure(theta: float, z: float, H: float) -> float:
+    q_top = 500.0
+    q_z = q_top * (0.35 + 0.65 * (z / H) ** 0.25)
+    cp = max(0.0, np.cos(theta)) + 0.18 * max(0.0, -np.cos(theta))
+    return -q_z * cp
+
+
+def _inside_service_opening(theta: float, z: float, H: float,
+                            r_base: float, r_top: float) -> bool:
     r = radius_at_height(z, H, r_base, r_top)
-    return theta * r, z
+    return abs(theta * r) < 1.45 and 3.0 < z < 12.0
 
 
-def _inside_service_opening(x: float, z: float) -> bool:
-    return abs(x) < 1.45 and 3.0 < z < 12.0
+def _xyz(theta: float, z: float, H: float, r_base: float, r_top: float) -> tuple[float, float, float]:
+    r = radius_at_height(z, H, r_base, r_top)
+    return r * np.cos(theta), r * np.sin(theta), z
 
 
-def build_chimney_wall(nx: int = 20, nz: int = 32, theory: str = "mindlin"):
-    """Costruisce lo sviluppo piano di una ciminiera rastremata con foro."""
+def build_chimney_shell(ntheta: int = 24, nz: int = 32):
+    """Costruisce una ciminiera shell sulla geometria cilindrica reale."""
     H = 60.0
     r_base = 3.0
     r_top = 2.05
+    thickness = 0.40
     mat = Material(E=30e9, nu=0.20)
-    sec = ShellSection(t=0.40)
+    sec = ShellSection(t=thickness)
 
-    theta_vals = np.linspace(-np.pi, np.pi, nx + 1)
+    theta_vals = np.linspace(-np.pi, np.pi, ntheta, endpoint=False)
     z_vals = np.linspace(0.0, H, nz + 1)
 
     kept_cells: list[tuple[int, int]] = []
-    used_grid_nodes: set[tuple[int, int]] = set()
+    used: set[tuple[int, int]] = set()
     for j in range(nz):
-        for i in range(nx):
-            theta_c = 0.5 * (theta_vals[i] + theta_vals[i + 1])
-            z_c = 0.5 * (z_vals[j] + z_vals[j + 1])
-            x_c, _ = _node_xy(theta_c, z_c, H, r_base, r_top)
-            if _inside_service_opening(x_c, z_c):
+        z_c = 0.5 * (z_vals[j] + z_vals[j + 1])
+        for i, theta0 in enumerate(theta_vals):
+            theta1 = theta_vals[(i + 1) % ntheta] + (2.0 * np.pi if i == ntheta - 1 else 0.0)
+            theta_c = ((0.5 * (theta0 + theta1) + np.pi) % (2.0 * np.pi)) - np.pi
+            if _inside_service_opening(theta_c, z_c, H, r_base, r_top):
                 continue
             kept_cells.append((i, j))
-            used_grid_nodes.update({
-                (i, j), (i + 1, j), (i + 1, j + 1), (i, j + 1),
-            })
+            used.update({(i, j), ((i + 1) % ntheta, j), ((i + 1) % ntheta, j + 1), (i, j + 1)})
 
-    m = Model()
+    m = ShellModel()
     node_map: dict[tuple[int, int], int] = {}
-    for nid, key in enumerate(sorted(used_grid_nodes, key=lambda p: (p[1], p[0])), start=1):
-        i, j = key
-        x, y = _node_xy(theta_vals[i], z_vals[j], H, r_base, r_top)
-        m.add_node(nid, x, y)
-        node_map[key] = nid
+    node_theta: dict[int, float] = {}
+    node_z: dict[int, float] = {}
+    nid = 1
+    for i, j in sorted(used, key=lambda p: (p[1], p[0])):
+        theta = theta_vals[i]
+        z = z_vals[j]
+        x, y, zz = _xyz(theta, z, H, r_base, r_top)
+        m.add_node(nid, x, y, zz)
+        node_map[(i, j)] = nid
+        node_theta[nid] = theta
+        node_z[nid] = z
+        nid += 1
 
-    eid = 1
     elem_theta_z: dict[int, tuple[float, float]] = {}
+    eid = 1
     for i, j in kept_cells:
+        ip = (i + 1) % ntheta
         nodes = [
             node_map[(i, j)],
-            node_map[(i + 1, j)],
-            node_map[(i + 1, j + 1)],
+            node_map[(ip, j)],
+            node_map[(ip, j + 1)],
             node_map[(i, j + 1)],
         ]
-        m.add_plate(eid, nodes, mat, sec, theory=theory)
-        elem_theta_z[eid] = (
-            0.5 * (theta_vals[i] + theta_vals[i + 1]),
-            0.5 * (z_vals[j] + z_vals[j + 1]),
-        )
+        m.add_shell(eid, nodes, mat, sec)
+        theta0 = theta_vals[i]
+        theta1 = theta_vals[ip] + (2.0 * np.pi if i == ntheta - 1 else 0.0)
+        theta_c = ((0.5 * (theta0 + theta1) + np.pi) % (2.0 * np.pi)) - np.pi
+        z_c = 0.5 * (z_vals[j] + z_vals[j + 1])
+        elem_theta_z[eid] = (theta_c, z_c)
         eid += 1
 
-    base_nodes = [
-        nid for (i, j), nid in node_map.items()
-        if j == 0
-    ]
+    base_nodes = [nid for nid, z in node_z.items() if abs(z) < 1e-12]
     for nid in base_nodes:
         m.fix(nid)
 
@@ -104,51 +105,155 @@ def build_chimney_wall(nx: int = 20, nz: int = 32, theory: str = "mindlin"):
         "H": H,
         "r_base": r_base,
         "r_top": r_top,
-        "thickness": sec.t,
+        "thickness": thickness,
+        "node_theta": node_theta,
+        "node_z": node_z,
         "base_nodes": base_nodes,
     }
 
 
-def wind_pressure(theta: float, z: float, H: float) -> float:
-    """Pressione radiale equivalente: quota crescente e massimo sul lato vento."""
-    q_top = 500.0
-    q_z = q_top * (0.35 + 0.65 * (z / H) ** 0.25)
-    cp = max(0.0, np.cos(theta)) + 0.18 * max(0.0, -np.cos(theta))
-    return -q_z * cp
+def radial_displacement(res, meta: dict, nid: int) -> float:
+    theta = meta["node_theta"][nid]
+    er = np.array([np.cos(theta), np.sin(theta), 0.0])
+    return float(res.displacements(nid)[:3] @ er)
+
+
+def _mesh_arrays(m: ShellModel, values: dict[int, float] | None = None,
+                 scale: float = 0.0, meta: dict | None = None):
+    x: list[float] = []
+    y: list[float] = []
+    z: list[float] = []
+    i: list[int] = []
+    j: list[int] = []
+    k: list[int] = []
+    c: list[float] = []
+    offset = 0
+    for el in m.elements.values():
+        pts = []
+        for nid in el.node_ids:
+            p = m.nodes[nid].coords.copy()
+            val = 0.0 if values is None else values[nid]
+            if meta is not None and scale:
+                theta = meta["node_theta"][nid]
+                p += scale * val * np.array([np.cos(theta), np.sin(theta), 0.0])
+            pts.append(p)
+            c.append(val)
+        x.extend([float(p[0]) for p in pts])
+        y.extend([float(p[1]) for p in pts])
+        z.extend([float(p[2]) for p in pts])
+        i.extend([offset, offset])
+        j.extend([offset + 1, offset + 2])
+        k.extend([offset + 2, offset + 3])
+        offset += 4
+    return x, y, z, i, j, k, c
+
+
+def _chimney_scene() -> dict:
+    return dict(
+        xaxis=dict(title="X", range=[-4.2, 4.2]),
+        yaxis=dict(title="Y", range=[-4.2, 4.2]),
+        zaxis=dict(title="Z", range=[0.0, 60.0]),
+        aspectmode="manual",
+        aspectratio=dict(x=1.0, y=1.0, z=1.45),
+        camera=dict(
+            projection=dict(type="orthographic"),
+            eye=dict(x=1.8, y=-2.4, z=0.35),
+        ),
+    )
+
+
+def plot_shell_mesh(m: ShellModel) -> go.Figure:
+    fig = go.Figure()
+    for el in m.elements.values():
+        pts = [m.nodes[nid].coords for nid in el.node_ids]
+        for a, b in ((0, 1), (1, 2), (2, 3), (3, 0)):
+            fig.add_trace(go.Scatter3d(
+                x=[pts[a][0], pts[b][0]], y=[pts[a][1], pts[b][1]], z=[pts[a][2], pts[b][2]],
+                mode="lines", line=dict(color="#444", width=2), showlegend=False,
+                hoverinfo="skip",
+            ))
+    fig.update_layout(
+        title="Mesh shell 3D ciminiera",
+        scene=_chimney_scene(),
+        margin=dict(l=10, r=10, t=50, b=10),
+    )
+    return fig
+
+
+def plot_shell_deformed(res, meta: dict, scale: float) -> go.Figure:
+    vals = {nid: radial_displacement(res, meta, nid) for nid in res.model.nodes}
+    x, y, z, i, j, k, c = _mesh_arrays(res.model, vals, scale=scale, meta=meta)
+    fig = go.Figure(go.Mesh3d(
+        x=x, y=y, z=z, i=i, j=j, k=k, intensity=c, colorscale="RdYlBu",
+        colorbar=dict(title="u_rad [m]"), flatshading=True,
+    ))
+    fig.update_layout(
+        title=f"Deformata shell 3D ciminiera (scala {scale:g}x)",
+        scene=_chimney_scene(),
+        margin=dict(l=10, r=10, t=50, b=10),
+    )
+    return fig
+
+
+def plot_shell_supports(m: ShellModel, meta: dict) -> go.Figure:
+    fig = plot_shell_mesh(m)
+    pts = [m.nodes[nid].coords for nid in meta["base_nodes"]]
+    fig.add_trace(go.Scatter3d(
+        x=[p[0] for p in pts], y=[p[1] for p in pts], z=[p[2] for p in pts],
+        mode="markers", marker=dict(size=5, color="#111", symbol="diamond"),
+        name="Vincoli", showlegend=True,
+    ))
+    fig.update_layout(title="Vincoli shell 3D ciminiera")
+    return fig
+
+
+def plot_shell_reactions(res, meta: dict) -> go.Figure:
+    fig = plot_shell_supports(res.model, meta)
+    vals = [np.linalg.norm(res.reactions(nid)[:3]) for nid in meta["base_nodes"]]
+    max_r = max(vals) if vals else 1.0
+    L = 0.7
+    for nid in meta["base_nodes"]:
+        rvec = res.reactions(nid)[:3]
+        mag = np.linalg.norm(rvec)
+        if mag < 1e-9 * max_r:
+            continue
+        p0 = res.model.nodes[nid].coords
+        p1 = p0 + rvec / mag * L * mag / max_r
+        fig.add_trace(go.Scatter3d(
+            x=[p0[0], p1[0]], y=[p0[1], p1[1]], z=[p0[2], p1[2]],
+            mode="lines", line=dict(color="#15803d", width=5), showlegend=False,
+            hovertemplate=f"R={mag:.3e} N<extra></extra>",
+        ))
+    fig.update_layout(title="Reazioni shell 3D ciminiera")
+    return fig
 
 
 def main() -> None:
-    m, elem_theta_z, meta = build_chimney_wall()
+    m, elem_theta_z, meta = build_chimney_shell()
     H = meta["H"]
     for eid, (theta, z) in elem_theta_z.items():
         m.add_pressure(eid, wind_pressure(theta, z, H))
 
     res = m.solve()
-    max_w = max(abs(res.displacement(nid, "w")) for nid in m.nodes)
-    total_reaction = sum(res.reactions(nid)[0] for nid in meta["base_nodes"])
-    total_load = float(m.assemble_loads()[0::3].sum())
+    radial_vals = [abs(radial_displacement(res, meta, nid)) for nid in m.nodes]
+    max_ur = max(radial_vals)
 
-    header("CS13 - Ciminiera rastremata con apertura di servizio")
+    header("CS13 - Ciminiera shell 3D rastremata con apertura")
     print(f"  H = {H:.1f} m, r_base = {meta['r_base']:.2f} m, r_top = {meta['r_top']:.2f} m")
     print(f"  t = {meta['thickness']:.3f} m, elementi = {len(m.elements)}, nodi = {len(m.nodes)}")
-    print("  Dominio: sviluppo piano cilindrico, foro alla base, bordo inferiore incastrato")
-    print_check("max |w|", max_w, None)
-    print_check("equilibrio verticale R+F", total_reaction + total_load, 0.0, tol=0.02)
+    print("  Geometria: cilindrica 3D reale, apertura di servizio, base incastrata")
+    print_check("max |u_radiale|", max_ur, 3.306855e-03, tol=0.10)
 
-    save_figure(plot_mesh(m, show_node_ids=False), "cs13_chimney_mesh.png",
-                width=950, height=650, title="Mesh ciminiera rastremata")
-    save_figure(plot_supports(m), "cs13_chimney_supports.png",
-                width=950, height=650, title="Vincoli alla base della ciminiera")
-    save_figure(plot_deformed(res, scale=10), "cs13_chimney_deformed.png",
-                width=950, height=650, title="Deformata ciminiera (scala 10x)")
-    save_figure(plot_contour(res, "w"), "cs13_chimney_w_map.png",
-                width=950, height=650, title="Spostamento w [m]")
-    save_figure(plot_contour(res, "Mx"), "cs13_chimney_Mx.png",
-                width=950, height=650, title="Mx [N m/m]")
-    save_figure(plot_contour(res, "My"), "cs13_chimney_My.png",
-                width=950, height=650, title="My [N m/m]")
-    save_figure(plot_reactions(res), "cs13_chimney_reactions.png",
-                width=950, height=650, title="Reazioni vincolari")
+    save_figure(plot_shell_mesh(m), "cs13_chimney_mesh.png",
+                width=950, height=900, title="Mesh shell 3D ciminiera")
+    save_figure(plot_shell_supports(m, meta), "cs13_chimney_supports.png",
+                width=950, height=900, title="Vincoli shell 3D")
+    save_figure(plot_shell_deformed(res, meta, scale=120), "cs13_chimney_deformed.png",
+                width=950, height=900, title="Deformata shell 3D (scala 120x)")
+    save_figure(plot_shell_deformed(res, meta, scale=0), "cs13_chimney_w_map.png",
+                width=950, height=900, title="Spostamento radiale reale [m]")
+    save_figure(plot_shell_reactions(res, meta), "cs13_chimney_reactions.png",
+                width=950, height=900, title="Reazioni shell 3D")
     print("  Immagini salvate in casestudies/images/")
 
 

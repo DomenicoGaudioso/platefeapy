@@ -8,9 +8,10 @@ permalink: /casestudies/
 
 # Casi studio platefeapy
 
-I casi studio raccolgono benchmark classici della letteratura FEM per piastre,
-insieme a esempi applicativi pensati per mostrare mesh generiche, vincoli,
-deformate amplificate, iso-linee e mappe di momento.
+I casi studio raccolgono benchmark classici della letteratura FEM per piastre e
+shell, insieme a esempi applicativi pensati per mostrare mesh generiche,
+geometrie 3D reali, vincoli, deformate amplificate, iso-linee e mappe di
+momento.
 
 ## Indice dei casi
 
@@ -57,7 +58,7 @@ standalone con `python casestudies/csNN_*.py`.
 | CS01 SS Navier | < 1% | Convergenza monotona |
 | CS02 Clamped | < 1% | Convergenza monotona |
 | CS03 Levy quadrata | ~40% | Caso difficile per Q4 |
-| CS04 Circolare SS | ~19% | Mesh Gmsh Q4 circolare, senza rettangolo esterno |
+| CS04 Circolare SS | ~14% | Mesh Gmsh Q4 circolare, senza rettangolo esterno |
 | CS05 Aspect ratio | < 10% | Errore cresce per a/b << 1 |
 | CS06 Patch load | ~70% | Errore di discretizzazione del patch |
 | CS07 Cantilever | < 10% | Convergenza lenta vicino all'incastro |
@@ -66,7 +67,7 @@ standalone con `python casestudies/csNN_*.py`.
 | CS10 Settlement | esatto | `w = -0.001 m` applicato al nodo |
 | CS11 Kirch/Mindlin | diverge | Kirchhoff ACM = thin only |
 | CS12 Patch test | < 1e-10 | Errore macchina |
-| CS13 Ciminiera | qualitativo | Sviluppo piano confrontato con volumfeapy CS12 |
+| CS13 Ciminiera | ~5% vs solido | Shell Q4 su geometria 3D reale confrontata con volumfeapy CS12 |
 
 I casi con errore elevato sono noti nella letteratura FEM come casi difficili
 per elementi a basso ordine. La libreria li mantiene per mostrare chiaramente

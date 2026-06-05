@@ -28,10 +28,9 @@ $$
 ## Mesh Gmsh
 
 Il caso non usa piu' una griglia rettangolare tagliata. La mesh viene generata
-con **Gmsh** come dominio circolare nativo a quadrilateri: un nucleo centrale
-Q4 e quattro patch anulari ricombinate. Tutti gli elementi appartengono alla
-piastra e il bordo esterno e' costituito da archi circolari discretizzati dal
-meshatore.
+con **Gmsh** come dominio circolare nativo e poi ricombinata in quadrilateri.
+Tutti gli elementi appartengono alla piastra e il bordo esterno e' costituito
+da archi circolari discretizzati dal meshatore.
 
 ```python
 nodes, quads = generate_gmsh_disk_quads(R, n_el)
@@ -55,8 +54,8 @@ for eid, quad in enumerate(quads, start=1):
 
 | BC | w_max esatto | w_max FEM (Gmsh 32) | err % |
 |----|--------------|-------------------|-------|
-| SS (w=0) | 3.8304e-03 | 4.5649e-03 | 19.18% |
-| Incastrata | 8.1250e-04 | 8.8884e-04 | 9.40% |
+| SS (w=0) | 3.8304e-03 | 3.3052e-03 | 13.71% |
+| Incastrata | 8.1250e-04 | 8.1016e-04 | 0.29% |
 
 ## Momenti flettenti
 

@@ -14,6 +14,7 @@ A Python finite-element solver for the **static and modal analysis** of **plate 
 
 - **Mindlin-Reissner plate** (thick plates, shear deformable, SRI integration to avoid shear locking)
 - **Kirchhoff-Love plate** (thin plates, ACM element — Adini-Clough-Melosh)
+- **3D Q4 shell model** for real curved surfaces with 6 DOFs per node
 - **Pressure loads** (uniform and patch)
 - **Nodal loads** (forces and moments)
 - **Thermal loads** (gradient through thickness)
@@ -63,6 +64,9 @@ print(res.displacements(1))  # [w, theta_x, theta_y]
 | `Model()` | Create an empty model |
 | `m.add_node(id, x, y)` | Add a node with ID and coordinates |
 | `m.add_plate(id, nodes, mat, sec, theory=...)` | Add a plate element (4 nodes) |
+| `ShellModel()` | Create a real 3D shell model |
+| `sm.add_node(id, x, y, z)` | Add a shell node on the real surface |
+| `sm.add_shell(id, nodes, mat, sec)` | Add a Q4 shell element (6 DOFs/node) |
 
 ### Materials & Sections
 

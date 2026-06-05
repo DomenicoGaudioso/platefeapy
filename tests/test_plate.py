@@ -153,3 +153,15 @@ def test_stiffness_positive_diagonal():
     m.add_plate(1, [1, 2, 3, 4], mat, sec)
     K = m.assemble_stiffness()
     assert np.all(np.diag(K) >= -1e-15)
+
+
+def test_plot_contour_adds_isolines():
+    m = _simply_supported_plate(n_elements=2)
+    for eid in m.elements:
+        m.add_pressure(eid, -1000.0)
+    res = m.solve()
+
+    from platefeapy.plotting import plot_contour
+    fig = plot_contour(res, "w", n=5, n_isolines=4)
+
+    assert any(trace.type == "scatter" and trace.mode == "lines" for trace in fig.data)

@@ -276,10 +276,11 @@ def tab_risultati():
             what = st.radio("Visualizza", ["Deformata", "Mx", "My", "Mxy", "Qx", "Qy", "w"],
                             horizontal=True)
             scale = st.number_input("Scala deformata", value=100.0)
+            show_isolines = st.checkbox("Mostra iso-linee", value=True)
             if what == "Deformata":
                 fig = plot_deformed(res, scale=scale)
             else:
-                fig = plot_contour(res, component=what)
+                fig = plot_contour(res, component=what, show_isolines=show_isolines)
             st.plotly_chart(fig, use_container_width=True)
         except Exception as exc:
             st.warning(f"Grafico non disponibile: {exc}")

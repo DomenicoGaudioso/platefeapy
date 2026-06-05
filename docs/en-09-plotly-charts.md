@@ -39,7 +39,7 @@ plot_deformed(res, scale=100).show()
 The deformed shape is rendered as a point cloud with element edges. The `scale`
 parameter amplifies the displacement for visualization.
 
-### plot_contour(result, component="Mx", n=11, title=None)
+### plot_contour(result, component="Mx", n=11, title=None, show_isolines=True)
 
 2D contour map of a field component:
 
@@ -48,6 +48,9 @@ from platefeapy.plotting import plot_contour
 
 # Bending moment Mx
 plot_contour(res, "Mx").show()
+
+# More/fewer separation lines between contour bands
+plot_contour(res, "Mx", n_isolines=12).show()
 
 # Bending moment My
 plot_contour(res, "My").show()
@@ -65,8 +68,9 @@ plot_contour(res, "w").show()
 
 Available components: `Mx`, `My`, `Mxy`, `Qx`, `Qy`, `w`.
 
-The contour is rendered as a scatter plot with color-coded values at `n×n` points
-per element.
+The contour is rendered as a scatter plot with color-coded values at `n×n`
+points per element. Iso-lines are drawn over the same sampled element
+triangulation to show the separation between value bands.
 
 ### plot_reactions(result, scale=1.0)
 

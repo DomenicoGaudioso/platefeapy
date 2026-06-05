@@ -39,7 +39,7 @@ plot_deformed(res, scale=100).show()
 La forma deformata è resa come nuvola di punti con bordi degli elementi. Il
 parametro `scale` amplifica lo spostamento per la visualizzazione.
 
-### plot_contour(result, component="Mx", n=11, title=None)
+### plot_contour(result, component="Mx", n=11, title=None, show_isolines=True)
 
 Mappa a colori 2D di una componente del campo:
 
@@ -48,6 +48,9 @@ from platefeapy.plotting import plot_contour
 
 # Momento flettente Mx
 plot_contour(res, "Mx").show()
+
+# Piu' o meno linee di separazione tra fasce di valore
+plot_contour(res, "Mx", n_isolines=12).show()
 
 # Momento flettente My
 plot_contour(res, "My").show()
@@ -64,6 +67,10 @@ plot_contour(res, "w").show()
 ```
 
 Componenti disponibili: `Mx`, `My`, `Mxy`, `Qx`, `Qy`, `w`.
+
+La mappa usa valori colorati su `n×n` punti per elemento. Le iso-linee sono
+disegnate sulla stessa triangolazione campionata per evidenziare la
+separazione tra fasce di valore.
 
 ### plot_reactions(result, scale=1.0)
 

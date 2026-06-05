@@ -140,6 +140,6 @@ Richiede l'extra `plot` (`plotly`, `kaleido`). Ogni funzione restituisce un
 
 - **`plot_mesh(model, show_node_ids=True)`** — mesh 2D con ID nodi.
 - **`plot_deformed(result, scale=1.0, n=21)`** — forma deformata 3D.
-- **`plot_contour(result, component="Mx", n=11)`** — mappa a colori 2D.
+- **`plot_contour(result, component="Mx", n=11, show_isolines=True)`** — mappa a colori 2D con iso-linee.
 - **`plot_reactions(result, scale=1.0)`** — reazioni vincolari.
 - **`plot_mode(modal_result, i=0, scale=1.0, n=21)`** — i-esima forma modale.

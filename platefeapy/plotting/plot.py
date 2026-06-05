@@ -20,6 +20,71 @@ def _padded_range(values, pad_fraction: float = 0.08) -> list[float]:
     return [v_min - pad, v_max + pad]
 
 
+def _contour_levels(v_min: float, v_max: float, count: int) -> list[float]:
+    if count <= 0 or v_max - v_min < 1e-30:
+        return []
+    return np.linspace(v_min, v_max, count + 2)[1:-1].tolist()
+
+
+def _edge_level_point_2d(pa: np.ndarray, pb: np.ndarray, va: float,
+                         vb: float, level: float) -> np.ndarray | None:
+    da = va - level
+    db = vb - level
+    if abs(da) < 1e-30 and abs(db) < 1e-30:
+        return None
+    if da * db > 0 or abs(vb - va) < 1e-30:
+        return None
+    t = (level - va) / (vb - va)
+    if t < -1e-12 or t > 1.0 + 1e-12:
+        return None
+    return pa + np.clip(t, 0.0, 1.0) * (pb - pa)
+
+
+def _triangle_isoline_2d(points: list[np.ndarray], values: list[float],
+                         level: float) -> tuple[np.ndarray, np.ndarray] | None:
+    intersections = []
+    for a, b in ((0, 1), (1, 2), (2, 0)):
+        point = _edge_level_point_2d(points[a], points[b], values[a], values[b], level)
+        if point is not None:
+            intersections.append(point)
+    unique = []
+    for point in intersections:
+        if not any(np.linalg.norm(point - other) < 1e-10 for other in unique):
+            unique.append(point)
+    if len(unique) < 2:
+        return None
+    return unique[0], unique[1]
+
+
+def _add_isoline_trace_2d(fig: go.Figure, x: list[float], y: list[float],
+                          values: list[float], triangles: list[tuple[int, int, int]],
+                          levels: list[float],
+                          color: str = "rgba(15,15,15,0.75)") -> None:
+    line_x, line_y = [], []
+    pts = [np.array([xv, yv], dtype=float) for xv, yv in zip(x, y)]
+    for level in levels:
+        for ia, ib, ic in triangles:
+            segment = _triangle_isoline_2d(
+                [pts[ia], pts[ib], pts[ic]],
+                [values[ia], values[ib], values[ic]],
+                level,
+            )
+            if segment is None:
+                continue
+            p0, p1 = segment
+            line_x.extend([float(p0[0]), float(p1[0]), None])
+            line_y.extend([float(p0[1]), float(p1[1]), None])
+    if line_x:
+        fig.add_trace(go.Scatter(
+            x=line_x, y=line_y,
+            mode="lines",
+            line=dict(color=color, width=1.8),
+            name="Iso-linee",
+            showlegend=False,
+            hoverinfo="skip",
+        ))
+
+
 def plot_mesh(model, show_node_ids: bool = True) -> go.Figure:
     """Disegna la mesh della piastra."""
     fig = go.Figure()
@@ -163,12 +228,14 @@ def plot_deformed(result, scale: float = 1.0, n: int = 21) -> go.Figure:
 
 
 def plot_contour(result, component: str = "Mx", n: int = 11,
-                 title: str | None = None) -> go.Figure:
+                 title: str | None = None, show_isolines: bool = True,
+                 n_isolines: int = 9) -> go.Figure:
     """Mappa a colori di una componente (Mx, My, Mxy, Qx, Qy, w)."""
     model = result.model
     fig = go.Figure()
 
     all_x, all_y, all_v = [], [], []
+    triangles: list[tuple[int, int, int]] = []
     for eid in model.elements:
         if component == "w":
             di = postprocess.element_displacements(result, eid, n=n)
@@ -176,15 +243,36 @@ def plot_contour(result, component: str = "Mx", n: int = 11,
         else:
             di = postprocess.element_stresses(result, eid, n=n)
             all_v.extend(di[component])
+        base = len(all_x)
         all_x.extend(di["x"])
         all_y.extend(di["y"])
+        for ii in range(n - 1):
+            for jj in range(n - 1):
+                p0 = base + ii * n + jj
+                p1 = base + ii * n + jj + 1
+                p2 = base + (ii + 1) * n + jj + 1
+                p3 = base + (ii + 1) * n + jj
+                triangles.extend([(p0, p1, p2), (p0, p2, p3)])
+
+    v_arr = np.asarray(all_v, dtype=float)
+    v_min = float(v_arr.min()) if v_arr.size else 0.0
+    v_max = float(v_arr.max()) if v_arr.size else 1.0
+    if v_max - v_min < 1e-30:
+        v_max = v_min + 1.0
 
     fig.add_trace(go.Scatter(
         x=all_x, y=all_y, mode="markers",
         marker=dict(size=8, color=all_v, colorscale="RdYlBu",
+                    cmin=v_min, cmax=v_max,
                     colorbar=dict(title=component)),
         showlegend=False,
     ))
+
+    if show_isolines:
+        _add_isoline_trace_2d(
+            fig, all_x, all_y, all_v, triangles,
+            _contour_levels(v_min, v_max, n_isolines),
+        )
 
     for el in model.elements.values():
         coords = el._coords()

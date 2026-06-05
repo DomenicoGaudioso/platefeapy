@@ -6,6 +6,10 @@ description: "platefeapy - Python FEM solver for plate and shell structures"
 permalink: /
 ---
 
+<div align="center">
+  <img src="img/Logo_PlatefeaPy.png" alt="platefeapy Logo" width="216">
+</div>
+
 # platefeapy
 
 Python finite-element solver for static and modal analysis of plate structures.

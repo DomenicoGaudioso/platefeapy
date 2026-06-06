@@ -30,6 +30,7 @@ momento.
 | [CS11](cs11-kirchhoff-vs-mindlin) | Confronto Kirchhoff vs Mindlin | thin vs thick plate |
 | [CS12](cs12-patch-test) | Patch test (campo lineare) | Esatto per costruzione |
 | [CS13](cs13-chimney) | Ciminiera rastremata con apertura | ACI 307 / CICIND |
+| [CS14](cs14-box-girder) | Cassone shell 3D a mensola | confronto con volumfeapy CS13 |
 
 ## Esecuzione
 
@@ -68,6 +69,7 @@ standalone con `python casestudies/csNN_*.py`.
 | CS11 Kirch/Mindlin | diverge | Kirchhoff ACM = thin only |
 | CS12 Patch test | < 1e-10 | Errore macchina |
 | CS13 Ciminiera | ~5% vs solido | Shell Q4 su geometria 3D reale confrontata con volumfeapy CS12 |
+| CS14 Cassone shell | ~12% vs solido | Cassone sottile shell confrontato con volumfeapy CS13 |
 
 I casi con errore elevato sono noti nella letteratura FEM come casi difficili
 per elementi a basso ordine. La libreria li mantiene per mostrare chiaramente

@@ -207,3 +207,20 @@ def test_chimney_case_has_opening_and_base_supports():
     assert meta["base_nodes"]
     assert all(len(set(m.dof_map[nid]).intersection(m._prescribed)) == 6
                for nid in meta["base_nodes"])
+
+
+def test_box_girder_shell_builds_real_3d_surfaces():
+    from casestudies.cs14_box_girder import build_box_girder_shell
+
+    m, meta = build_box_girder_shell(nx=4, n_per_wall=1)
+    coords = np.array([node.coords for node in m.nodes.values()])
+
+    assert len(m.elements) == 16
+    assert coords[:, 0].min() == 0.0
+    assert coords[:, 0].max() == meta["L"]
+    assert coords[:, 1].min() < 0.0 < coords[:, 1].max()
+    assert coords[:, 2].min() < 0.0 < coords[:, 2].max()
+    assert meta["fixed_nodes"]
+    assert meta["tip_nodes"]
+    assert all(len(set(m.dof_map[nid]).intersection(m._prescribed)) == 6
+               for nid in meta["fixed_nodes"])

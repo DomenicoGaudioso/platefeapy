@@ -37,6 +37,7 @@ def main():
         ("CS11 - Kirchhoff vs Mindlin",      "cs11_kirchhoff_vs_mindlin"),
         ("CS12 - Patch test",                "cs12_patch_test"),
         ("CS13 - Ciminiera rastremata",      "cs13_chimney"),
+        ("CS14 - Cassone shell 3D",          "cs14_box_girder"),
     ]
 
     for label, module_name in cases:
